@@ -2,16 +2,12 @@
 
 RKO_LIO is a LiDAR-inertial odometry system that is simple to deploy on different sensor configurations and robotic platforms with as minimal a change in configuration as necessary.
 
-We have tested our system on data from multiple different sensors and platforms.
-For example, we've used data from different versions of LiDARs from Velodyne, Ouster, Hesai, Livox, Robosense, all without any change in how we process the incoming LiDAR data, i.e., you don't specify which LiDAR you're using.
+We have tested our system on LiDAR data from Velodyne, Ouster, Hesai, Livox, and Robosense sensors, all without any change in how we process the incoming LiDAR data, i.e., you don't specify which LiDAR you're using.
 For the IMU, we only require the accelerometer and gyroscope readings, the bare minimum.
 
 You don't need to look up manufacturer spec sheets when you want to use our approach on your data.
-Nor do you need to calibrate measurement noise, bias specifications, or other sensor-specific parameters of your IMU or LiDAR.
-We do not ask these values as parameters because we don't use them.
 
 All you need to provide is the extrinsic transformation between the IMU and LiDAR and you can start using our system for your LiDAR-inertial odometry needs!
-
 
 <p align="center">
   <img src="docs/example_multiple_platforms.png" alt="Visualization of odometry system running on data from four different platforms in four different environments" />
@@ -41,19 +37,28 @@ Clone the repository into your ROS workspace and then
 colcon build --packages-select rko_lio # --symlink-install --event-handlers console_direct+ 
 ```
 
-Note that we have some [default build configuration options](https://colcon.readthedocs.io/en/released/user/configuration.html) which should automatically get picked up by colcon.
+To launch the odometry node:
 
-We have a few dependencies, but as long as the defaults apply, the package should build without any further consideration.
-If you encounter any issues, please check [BUILD.md](BUILD.md) for further details or open an issue afterwards.
-
+```bash
+ros2 launch rko_lio odometry.launch.py # config_file:=/path/to/a/config.yaml rviz:=true
+```
 
 Please refer to the [ROS readme](ros/README.md) for further ROS-specific details.
+
+<details>
+<summary>Build information</summary>
+
+Note that we have some [default build configuration options](ros/colcon.pkg) which should automatically get picked up by colcon.
+We have a few dependencies, but as long as these defaults apply, the package should build without any further consideration.
+If you encounter any issues, please check [BUILD.md](BUILD.md) for further details or open an issue afterwards.
+
+</details>
 
 ## Python
 
 > We are working on providing the python interface via the Python Package Index, so you will be able to install the system using pip (or some other frontend) instead of building from source.
 
-We provide a python interface to our system which can be convenient to investigate recorded data offline as you don't need to setup a ROS environment first.
+The python interface to our system can be convenient to investigate recorded data offline as you don't need to setup a ROS environment first.
 
 As before, clone the repository somewhere and then
 
@@ -61,8 +66,10 @@ As before, clone the repository somewhere and then
 cd python && pip install .
 ```
 
-There's a few optional dependencies that will need to be pulled in based on what part of the interface you use.
-For example, inspecting rosbag data will require the `rosbags` package, and enabling visualization will require the `rerun-sdk` package; you will be prompted when a dependency is missing. 
+<details>
+<summary>Optional dependencies</summary>
+There's a few optional dependencies depending on what part of the interface you use.
+E.g., inspecting rosbag data will require `rosbags`, and enabling visualization will require `rerun-sdk`; you will be prompted when a dependency is missing. 
 In case you don't mind pulling in a few additional dependencies and want everything available, instead run
 
 ```bash
@@ -70,21 +77,32 @@ cd python && pip install ".[all]"
 # or from the repository root
 make python
 ```
+</details>
 
+Afterwards, check
+
+```bash
+rko_lio --help
+```
+
+You'll find further usage instructions in [Python](python/README.md).
+
+<details>
+<summary>Please prefer the ROS version over the python version if you can</summary>
 **Please note:** the ROS version is the intended way to use our odometry system on a robot.
 The python version is slower than the ROS version, not on the odometry itself, but on how we read incoming data, i.e. data-loading.
 Without getting into details, if you can, you should prefer using the ROS version.
-We also provide a way to directly inspect and run our odometry on recorded rosbags (see [ROS usage](ros/README.md) which still has the same performance benefit over the python version.
+We also provide a way to directly inspect and run our odometry on recorded rosbags (see [ROS usage](ros/README.md)) which still has the same performance benefit over the python version.
 The python interface is merely meant to be a convenience.
+</details>
 
-With that out of the way, a special mention goes out to [Rerun](https://rerun.io/) for providing an extremely easy-to-use but highly performative visualization system.
-Without this, I probably would not have made a python interface at all.
 
 ## A note on transformations
 
-Please refer to the [ROS](ros/README.md) or [Python](python/README.md) readmes for specific use instructions, but it bears mentioning here our convention for specifying sensor extrinsics, the one parameter we do require you to provide.
+It bears mentioning here our convention for specifying sensor extrinsics, the one parameter we do require you to provide.
 
 Throughout this package, we refer to transformations using `transform_<from-frame>_to_<to-frame>` or `transform_<from-frame>2<to-frame>`.
+
 By this, we mean a transformation that converts a vector expressed in the `<from-frame>` coordinate system to the `<to-frame>` coordinate system.
 
 Mathematically, this translates to:
@@ -103,9 +121,15 @@ This project is free software made available under the MIT license. For details,
 
 You can check out the branch `ral_submission` for the version of the code used for submission to RA-L.
 Please note that that branch is meant to be an as-is reproduction of the code used during submission and is not supported.
-The `master` and release versions are vastly improved and are the recommended way to use this system.
+The `master` and release versions are vastly improved, supported, and are the recommended way to use this system.
 
 ## Acknowledgements
 
+<details>
+<summary>KISS-ICP, Kinematic-ICP, Bonxai, PlotJuggler, Rerun</summary>
 This package is inspired by and would not be possible without the work of [KISS-ICP](https://github.com/PRBonn/kiss-icp) and [Kinematic-ICP](https://github.com/PRBonn/kinematic-icp).
-Additionally, we use and rely heavily on, either in the package itself or during development, [Bonxai](https://github.com/facontidavide/Bonxai), [PlotJuggler](https://github.com/facontidavide/PlotJuggler), [Rerun](https://github.com/rerun-io/rerun) and of course ROS itself.
+Additionally, we use and rely heavily on, either in the package itself or during development, [Bonxai](https://github.com/facontidavide/Bonxai), [PlotJuggler](https://github.com/facontidavide/PlotJuggler), [Rerun](https://github.com/rerun-io/rerun), and of course ROS itself.
+
+A special mention goes out to [Rerun](https://rerun.io/) for providing an extremely easy-to-use but highly performative visualization system.
+Without this, I probably would not have made a python interface at all.
+</details>
