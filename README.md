@@ -21,7 +21,7 @@ In case you already have a rosbag which contains a TF tree, using our system is 
 rko_lio /path/to/rosbag
 ```
 
-For further details, please refer to the [Python readme](python/README.md).
+For further details, please refer to the [Python readme](python#rko_lio---python-bindings).
 
 ## Setup
 
@@ -34,7 +34,7 @@ We currently support ROS2 Jazzy, and plan to additionally support Humble, Kilted
 Clone the repository into your ROS workspace and then
 
 ```bash
-colcon build --packages-select rko_lio # --symlink-install --event-handlers console_direct+ 
+colcon build --packages-select rko_lio # --symlink-install --event-handlers console_direct+
 ```
 
 To launch the odometry node:
@@ -43,7 +43,7 @@ To launch the odometry node:
 ros2 launch rko_lio odometry.launch.py # config_file:=/path/to/a/config.yaml rviz:=true
 ```
 
-Please refer to the [ROS readme](ros/README.md) for further ROS-specific details.
+Please refer to the [ROS readme](ros) for further ROS-specific details.
 
 <details>
 <summary>Build information</summary>
@@ -70,7 +70,7 @@ cd python && pip install .
 <summary>Optional dependencies</summary>
 
 There's a few optional dependencies depending on what part of the interface you use.
-E.g., inspecting rosbag data will require `rosbags`, and enabling visualization will require `rerun-sdk`; you will be prompted when a dependency is missing. 
+E.g., inspecting rosbag data will require `rosbags`, and enabling visualization will require `rerun-sdk`; you will be prompted when a dependency is missing.
 In case you don't mind pulling in a few additional dependencies and want everything available, instead run
 
 ```bash
@@ -87,7 +87,7 @@ Afterwards, check
 rko_lio --help
 ```
 
-You'll find further usage instructions in [Python](python/README.md).
+You'll find further usage instructions in the [python readme](python#usage).
 
 <details>
 <summary>Please prefer the ROS version over the python version if you can</summary>
@@ -95,7 +95,7 @@ You'll find further usage instructions in [Python](python/README.md).
 **Please note:** the ROS version is the intended way to use our odometry system on a robot.
 The python version is slower than the ROS version, not on the odometry itself, but on how we read incoming data, i.e. data-loading.
 Without getting into details, if you can, you should prefer using the ROS version.
-We also provide a way to directly inspect and run our odometry on recorded rosbags (see [ROS usage](ros/README.md)) which still has the same performance benefit over the python version.
+We also provide a way to directly inspect and run our odometry on recorded rosbags (see [ROS usage](ros#usage)) which still has the same performance benefit over the python version.
 The python interface is merely meant to be a convenience.
 
 </details>
@@ -112,10 +112,10 @@ By this, we mean a transformation that converts a vector expressed in the `<from
 Mathematically, this translates to:
 
 $$
-\mathbf{v}^{\text{to}} = {}^{\text{to}} \mathbf{T}_{\text{from}} \, \mathbf{v}^{\text{from}}
+\mathbf{v}^{\text{to}} = {}^{\text{to}} \mathbf{T}_{\text{from}}  \mathbf{v}^{\text{from}}
 $$
 
-The superscript on the vector indicates the frame in which the vector is expressed.
+The superscript on the vector indicates the frame in which the vector is expressed, and $${}^{\text{to}} \mathbf{T}_{\text{from}}$$ corresponds to `transform_<from-frame>_to_<to-frame>`.
 
 ## License
 
