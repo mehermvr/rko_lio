@@ -68,6 +68,7 @@ cd python && pip install .
 
 <details>
 <summary>Optional dependencies</summary>
+
 There's a few optional dependencies depending on what part of the interface you use.
 E.g., inspecting rosbag data will require `rosbags`, and enabling visualization will require `rerun-sdk`; you will be prompted when a dependency is missing. 
 In case you don't mind pulling in a few additional dependencies and want everything available, instead run
@@ -77,6 +78,7 @@ cd python && pip install ".[all]"
 # or from the repository root
 make python
 ```
+
 </details>
 
 Afterwards, check
@@ -89,11 +91,13 @@ You'll find further usage instructions in [Python](python/README.md).
 
 <details>
 <summary>Please prefer the ROS version over the python version if you can</summary>
+
 **Please note:** the ROS version is the intended way to use our odometry system on a robot.
 The python version is slower than the ROS version, not on the odometry itself, but on how we read incoming data, i.e. data-loading.
 Without getting into details, if you can, you should prefer using the ROS version.
 We also provide a way to directly inspect and run our odometry on recorded rosbags (see [ROS usage](ros/README.md)) which still has the same performance benefit over the python version.
 The python interface is merely meant to be a convenience.
+
 </details>
 
 
@@ -127,9 +131,11 @@ The `master` and release versions are vastly improved, supported, and are the re
 
 <details>
 <summary>KISS-ICP, Kinematic-ICP, Bonxai, PlotJuggler, Rerun</summary>
+
 This package is inspired by and would not be possible without the work of [KISS-ICP](https://github.com/PRBonn/kiss-icp) and [Kinematic-ICP](https://github.com/PRBonn/kinematic-icp).
 Additionally, we use and rely heavily on, either in the package itself or during development, [Bonxai](https://github.com/facontidavide/Bonxai), [PlotJuggler](https://github.com/facontidavide/PlotJuggler), [Rerun](https://github.com/rerun-io/rerun), and of course ROS itself.
 
 A special mention goes out to [Rerun](https://rerun.io/) for providing an extremely easy-to-use but highly performative visualization system.
 Without this, I probably would not have made a python interface at all.
+
 </details>
