@@ -1,12 +1,28 @@
-# RKO_LIO - LiDAR-Inertial Odometry Without Sensor-Specific Modelling
+<div align="center">
+  <h1>RKO_LIO - LiDAR-Inertial Odometry<br />Without Sensor-Specific Modelling</h1>
+</div>
 
-RKO_LIO is a LiDAR-inertial odometry system that is by design simple to deploy on different sensor configurations and robotic platforms with as minimal a change in configuration as necessary.
+<p align="center">
+ROS Distros:
+<br />
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/ros_build_humble.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/ros_build_humble.yaml/badge.svg?branch=master" alt="Humble" /></a>
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/ros_build_jazzy.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/ros_build_jazzy.yaml/badge.svg?branch=master" alt="Jazzy" /></a>
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/ros_build_kilted.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/ros_build_kilted.yaml/badge.svg?branch=master" alt="Kilted" /></a>
+</p>
 
-We have no restriction on which LiDAR you can use, and you can do so without changing any config (we've tested Velodyne, Ouster, Hesai, Livox, Robosense, Aeva sensors).
-For using an IMU, we require only the accelerometer and gyroscope readings, the bare minimum.
-You don't need to look up manufacturer spec sheets to provide noise specifications, etc.
-
-All you need to provide is the extrinsic transformation between the IMU and LiDAR and you can start using our system for your LiDAR-inertial odometry needs!
+<p align="center">
+Python Bindings:
+<br />
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_ubuntu_2204.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_ubuntu_2204.yaml/badge.svg?branch=master" alt="Ubuntu 22.04" /></a>
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_ubuntu_2204_arm.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_ubuntu_2204_arm.yaml/badge.svg?branch=master" alt="Ubuntu 22.04 ARM" /></a>
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_ubuntu_2404.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_ubuntu_2404.yaml/badge.svg?branch=master" alt="Ubuntu 24.04" /></a>
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_ubuntu_2404_arm.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_ubuntu_2404_arm.yaml/badge.svg?branch=master" alt="Ubuntu 24.04 ARM" /></a>
+<br />
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_macos_14.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_macos_14.yaml/badge.svg?branch=master" alt="macOS 14" /></a>
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_macos_15.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_macos_15.yaml/badge.svg?branch=master" alt="macOS 15" /></a>
+<br />
+<a href="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_windows_2022.yaml"><img src="https://github.com/PRBonn/rko_lio/actions/workflows/python_bindings_windows_2022.yaml/badge.svg?branch=master" alt="Windows 2022" /></a>
+</p>
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/PRBonn/rko_lio/refs/heads/master/docs/example_multiple_platforms.png" alt="Visualization of odometry system running on data from four different platforms in four different environments" />
@@ -33,17 +49,28 @@ and you should be good to go! For quick details on further options, check `rko_l
 
 For detailed install and usage instructions, please refer to the [python bindings readme](python#rko_lio---python-bindings).
 
+## About
+
+RKO_LIO is a LiDAR-inertial odometry system that is by design simple to deploy on different sensor configurations and robotic platforms with as minimal a change in configuration as necessary.
+
+We have no restriction on which LiDAR you can use, and you can do so without changing any config (we've tested Velodyne, Ouster, Hesai, Livox, Robosense, Aeva sensors).
+For using an IMU, we require only the accelerometer and gyroscope readings, the bare minimum.
+You don't need to look up manufacturer spec sheets to provide noise specifications, etc.
+
+All you need to provide is the extrinsic transformation between the IMU and LiDAR and you can start using our system for your LiDAR-inertial odometry needs!
+
 ## Setup
 
 ### ROS2
 
 > We are working on getting the odometry package into the ROS index, so you can install it using system package managers instead of building from source.
 
-We currently support ROS2 Jazzy and Kilted, with plans to additionally support Humble and Rolling.
+We currently support ROS2 Humble, Jazzy and Kilted.
 
 Clone the repository into your ROS workspace and then
 
 ```bash
+# we use ninja to build by default
 colcon build --packages-select rko_lio # --symlink-install --event-handlers console_direct+
 ```
 
@@ -58,6 +85,7 @@ Please refer to the [ROS readme](ros) for further ROS-specific details.
 <details>
 <summary>Build information</summary>
 
+
 Note that we have some [default build configuration options](ros/colcon.pkg) which should automatically get picked up by colcon.
 We have a few dependencies, but as long as these defaults apply, the package should build without any further consideration.
 If you encounter any issues, please check [build.md](docs/build.md) for further details or open an issue afterwards.
@@ -68,13 +96,13 @@ If you encounter any issues, please check [build.md](docs/build.md) for further 
 
 The python interface to our system can be convenient to investigate recorded data offline as you don't need to setup a ROS environment first.
 
+We provide wheels for Linux, macOS, and Windows.
+
 You can install RKO_LIO by simply
 
 ```bash
 pip install rko_lio
 ```
-
-We provide wheels for Linux, macOS, and Windows.
 
 <details>
 <summary>Optional dependencies</summary>
