@@ -1,4 +1,3 @@
-# We dont do a rolling build for now, because i'm sure thats gonna break often
 name: ROS Build
 on:
   push:
@@ -7,11 +6,13 @@ on:
     branches: ["master"]
 jobs:
   ros_build:
+    name: ROS build for ${{ matrix.ros_distro }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         ros_distro: [jazzy, kilted]
         # ros_distro: [humble, jazzy, kilted]
+        # no rolling build for now, because i'm sure thats gonna break often
     container:
       image: osrf/ros:${{ matrix.ros_distro }}-desktop
     steps:

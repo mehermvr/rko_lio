@@ -8,11 +8,13 @@ on:
     branches: ["master"]
 jobs:
   cibuildwheel:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build py wheels on ${{ matrix.os }}
+    env:
+      GIT_LFS_SKIP_SMUDGE: 1
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest] # windows and macos will be added later
+        os: [ubuntu-24.04, ubuntu-24.04-arm, windows-2022, macos-15]
     steps:
       - uses: actions/checkout@v5
       - name: Build test wheels (only PRs)
