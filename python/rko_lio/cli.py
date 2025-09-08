@@ -39,6 +39,31 @@ def version_callback(value: bool):
         raise typer.Exit(0)
 
 
+def dump_config_callback(value: bool):
+    if value:
+        import yaml
+
+        from .lio import LIOConfig
+
+        def pybind_to_dict(obj):
+            return {
+                attr: getattr(obj, attr)
+                for attr in dir(obj)
+                if not attr.startswith("_") and not callable(getattr(obj, attr))
+            }
+
+        config = pybind_to_dict(LIOConfig())
+        config["extrinsic_imu2base_quat_xyzw_xyz"] = []
+        config["extrinsic_lidar2base_quat_xyzw_xyz"] = []
+
+        with open("config.yaml", "w") as f:
+            yaml.dump(config, f, default_flow_style=False)
+        typer.echo(
+            "Default config dumped to config.yaml. Note that the extrinsics are left as an empty list. If you don't need them, delete the two respective keys. If you need them, you need to specify them as [qx, qy, qz, qw, x, y, z]."
+        )
+        raise typer.Exit()
+
+
 def dataloader_name_callback(value: str):
     from .dataloaders import available_dataloaders
 
@@ -72,10 +97,18 @@ def parse_extrinsics_from_config(config_data: dict):
     lidar_config_val = config_data.pop("extrinsic_lidar2base_quat_xyzw_xyz", None)
 
     if imu_config_val is not None:
+        if not len(imu_config_val) == 7:
+            raise ValueError(
+                f"extrinsic_imu2base_quat_xyzw_xyz cannot be of length {len(imu_config_val)} but should be 7"
+            )
         extrinsic_imu2base = convert_quat_xyzw_xyz_to_matrix(
             np.asarray(imu_config_val, dtype=np.float64)
         )
     if lidar_config_val is not None:
+        if not len(lidar_config_val) == 7:
+            raise ValueError(
+                f"[ERROR] extrinsic_lidar2base_quat_xyzw_xyz cannot be of length {len(imu_config_val)} but should be 7"
+            )
         extrinsic_lidar2base = convert_quat_xyzw_xyz_to_matrix(
             np.asarray(lidar_config_val, dtype=np.float64)
         )
@@ -85,7 +118,9 @@ def parse_extrinsics_from_config(config_data: dict):
 app = typer.Typer()
 
 
-@app.command()
+@app.command(
+    epilog="Feel free to open an issue on https://github.com/PRBonn/rko_lio if how to use some option is unclear or you need some help!"
+)
 def cli(
     data_path: Path = typer.Argument(..., exists=True, help="Path to data folder"),
     config_fp: Path | None = typer.Option(
@@ -145,13 +180,22 @@ def cli(
     version: bool | None = typer.Option(
         None,
         "--version",
-        help="Show the current version of RKO_LIO",
+        help="Show the current version of RKO_LIO and exit",
         callback=version_callback,
         is_eager=True,
+        rich_help_panel="Auxilary commands",
+    ),
+    dump_config: bool | None = typer.Option(
+        None,
+        "--dump_config",
+        help="Dump the default config to config.yaml and exit",
+        callback=dump_config_callback,
+        is_eager=True,
+        rich_help_panel="Auxilary commands",
     ),
 ):
     """
-    Run LIO pipeline with the selected dataloader and parameters.
+    Run RKO_LIO with the selected dataloader and parameters.
     """
 
     if viz:

@@ -73,6 +73,9 @@ class RosbagDataLoader:
             bagfiles = [data_path]
         self.first_bag_path = bagfiles[0]  # for logging
         self.bag = AnyReader(bagfiles)
+        if len(bagfiles) > 1:
+            print("Reading multiple .bag files in directory:")
+            print("\n".join(sorted([path.name for path in bagfiles])))
         self.bag.open()
 
         self.lidar_topic = self.check_topic(
@@ -96,9 +99,12 @@ class RosbagDataLoader:
             print("Building TF tree.")
             static_tf_tree = create_static_tf_tree(self.bag)
             if not static_tf_tree:
-                raise ValueError(
-                    "The rosbag doesn't contain a static tf tree, cannot query it for extrinsics. Please specify the extrinsics manually in a config."
+                print(
+                    "[ERROR] The rosbag doesn't contain a static tf tree, cannot query it for extrinsics. Please specify the extrinsics manually in a config. You can use 'rko_lio --dump_config' to dump a default config."
                 )
+                import sys
+
+                sys.exit(1)
 
             print("Querying TF tree for imu to base extrinsic.")
             self.T_imu_to_base = query_static_tf(
@@ -169,10 +175,21 @@ class RosbagDataLoader:
         header_stamp = data.header.stamp
         header_stamp_sec = header_stamp.sec + (header_stamp.nanosec / 1e9)
         points, raw_timestamps = self.ros_read_point_cloud(data)
-        _, _, abs_timestamps = self.rko_lio_pybind._process_timestamps(
-            self.rko_lio_pybind._VectorDouble(raw_timestamps), header_stamp_sec
-        )
-        return points, np.asarray(abs_timestamps)
+        if raw_timestamps is not None and raw_timestamps.size > 0:
+            _, _, abs_timestamps = self.rko_lio_pybind._process_timestamps(
+                self.rko_lio_pybind._VectorDouble(raw_timestamps), header_stamp_sec
+            )
+            return points, np.asarray(abs_timestamps)
+        else:
+            raw_timestamps = np.ones(points.shape[0]) * header_stamp_sec
+            if not hasattr(self, "_printed_timestamp_warning"):
+                self._printed_timestamp_warning = True
+                RED_TEXT_ON_WHITE_BG = "\033[1;31;47m"
+                RESET = "\033[0m"
+                print(
+                    f"\n\n{RED_TEXT_ON_WHITE_BG}[WARNING] Could not detect timestamps in the point cloud. Odometry performance will suffer. Also please disable deskewing (enabled by default) otherwise the odometry may not work properly.{RESET}\n\n"
+                )
+            return points, raw_timestamps
 
     def check_topic(self, topic: str | None, expected_msgtype: str) -> str:
         topics_of_type = [
