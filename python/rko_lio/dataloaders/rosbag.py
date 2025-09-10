@@ -41,6 +41,7 @@ class RosbagDataLoader:
         lidar_frame_id: str | None,
         base_frame_id: str | None,
         query_extrinsics: bool = True,
+        seek: int | None = None,
     ):
         """query_tf_tree: try to query a tf tree if it exists"""
 
@@ -84,6 +85,7 @@ class RosbagDataLoader:
         self.imu_topic = self.check_topic(
             imu_topic, expected_msgtype="sensor_msgs/msg/Imu"
         )
+
         self.connections = [
             x
             for x in self.bag.connections
@@ -114,7 +116,12 @@ class RosbagDataLoader:
             self.T_lidar_to_base = query_static_tf(
                 static_tf_tree, lidar_frame_id, base_frame_id
             )
-        self.msgs = self.bag.messages(connections=self.connections)
+
+        self.seek = seek
+        self.msgs = self.bag.messages(
+            connections=self.connections,
+            start=self.seek if self.seek is not None else None,
+        )
 
     def __del__(self):
         if hasattr(self, "bag"):
@@ -142,6 +149,7 @@ class RosbagDataLoader:
     def __getitem__(self, idx):
         connection, bag_timestamp, rawdata = next(self.msgs)
         deserialized_data = self.bag.deserialize(rawdata, connection.msgtype)
+
         if connection.topic == self.imu_topic:
             return "imu", self.read_imu(deserialized_data)
         elif connection.topic == self.lidar_topic:

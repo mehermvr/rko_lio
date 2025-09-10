@@ -177,6 +177,11 @@ def cli(
         "--lidar_frame",
         help="Extra dataloader argument: lidar frame overload (for rosbag only)",
     ),
+    seek: int | None = typer.Option(
+        None,
+        "--seek",
+        help="Extra dataloader argument: Skip to this timestamp (ns, for rosbag only)",
+    ),
     version: bool | None = typer.Option(
         None,
         "--version",
@@ -242,6 +247,7 @@ def cli(
         lidar_frame_id=lidar_frame,
         base_frame_id=base_frame,
         query_extrinsics=need_to_query_extrinsics,
+        seek=seek,
     )
     data_count = len(dataloader)
     print("Loaded dataloader:", dataloader)

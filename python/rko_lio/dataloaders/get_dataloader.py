@@ -37,6 +37,7 @@ def get_dataloader(
     lidar_frame_id: str | None = None,
     base_frame_id: str | None = None,
     query_extrinsics: bool = True,
+    seek: int | None = None,
 ):
     if name is None:
         return guess_dataloader(
@@ -48,6 +49,7 @@ def get_dataloader(
             lidar_frame_id=lidar_frame_id,
             base_frame_id=base_frame_id,
             query_extrinsics=query_extrinsics,
+            seek=seek,
         )
 
     if name == "rosbag":
@@ -61,6 +63,7 @@ def get_dataloader(
             lidar_frame_id=lidar_frame_id,
             base_frame_id=base_frame_id,
             query_extrinsics=query_extrinsics,
+            seek=seek,
         )
 
     elif name == "raw":
@@ -88,6 +91,7 @@ def guess_dataloader(
     lidar_frame_id: str | None = None,
     base_frame_id: str | None = None,
     query_extrinsics: bool = True,
+    seek: int | None = None,
 ):
     print("Guessing the dataloader...")
     # Check for rosbag files
@@ -109,6 +113,7 @@ def guess_dataloader(
             lidar_frame_id=lidar_frame_id,
             base_frame_id=base_frame_id,
             query_extrinsics=query_extrinsics,
+            seek=seek,
         )
 
     # Check for raw data
