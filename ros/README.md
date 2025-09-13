@@ -1,4 +1,4 @@
-# RKO_LIO - LiDAR-Inertial Odometry
+# RKO LIO - LiDAR-Inertial Odometry
 
 Supported ROS Distros: Humble, Jazzy, Kilted and Rolling.
 

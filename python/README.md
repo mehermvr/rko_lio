@@ -1,4 +1,4 @@
-# RKO_LIO - Python Bindings
+# RKO LIO - Python Bindings
 
 The python interface/wrapper is a convenience tool to run the odometry offline on recorded data.
 
@@ -14,7 +14,7 @@ pip install rko_lio
 
 We provide PyPI wheels for Linux, macOS, and Windows ([PyPI page](https://pypi.org/project/rko-lio)).
 
-To be able to use `rko_lio` with any of the dataloaders or to enable visualization, you'll need to install additional dependencies.
+To be able to use RKO LIO with any of the dataloaders or to enable visualization, you'll need to install additional dependencies.
 You'll be prompted for specific packages as they become required during runtime.
 
 For example, to use our rosbag dataloader and visualize the results, you'll need
