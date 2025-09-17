@@ -1,11 +1,17 @@
 ---
 name: Bug report
-about: Create a report in case rko lio is not working as expected
+about: Please use this if rko lio has an error, otherwise use the blank template
 title: "[BUG]"
 labels: bug
 assignees: ''
 
 ---
+
+<!--
+If you think your issue doesn't require all the following details, use the blank issue template instead.
+Please do note however, if you do fill in all the following details, you make life easier for me to debug the error.
+Otherwise, I might have to ask you some of these details again anyways.
+-->
 
 **Environment**
 - Which OS are you using?
