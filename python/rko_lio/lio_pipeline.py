@@ -170,6 +170,12 @@ class LIOPipeline:
                 self.imu_buffer = [
                     imu for imu in self.imu_buffer if imu["time"] >= frame["end_time"]
                 ]
+                save_raw_scan_as_ply(
+                    frame["scan"],
+                    frame["timestamps"],
+                    frame["end_time"],
+                    output_dir="ply_dump_raw",
+                )
                 # Register the lidar scan
                 try:
                     if self.extrinsic_lidar2base is not None:
@@ -292,3 +298,36 @@ def height_colors_from_points(points: np.ndarray) -> np.ndarray:
     ).astype(np.uint8)
 
     return colors
+
+
+def save_raw_scan_as_ply(
+    raw_scan: np.ndarray,
+    timestamps: np.ndarray,
+    end_time_seconds: float,
+    output_dir: str = "ply_dump_raw",
+):
+    """
+    Saves the raw scan points with timestamps as a PLY file.
+    The filename is <int_nanoseconds>.ply based on end_time_seconds.
+    Timestamps are saved as a custom point attribute "timestamp".
+    """
+    from pathlib import Path
+
+    import open3d as o3d
+
+    if raw_scan is None or len(raw_scan) == 0:
+        return
+
+    Path(output_dir).mkdir(exist_ok=True, parents=True)
+
+    fname = Path(output_dir) / f"{int(end_time_seconds * 1e9)}.ply"
+
+    import open3d.core as o3c
+
+    points_tensor = o3c.Tensor(raw_scan, dtype=o3c.float32)
+    timestamps_tensor = o3c.Tensor(timestamps.reshape(-1, 1), dtype=o3c.float64)
+
+    pcd_o3d = o3d.t.geometry.PointCloud(points_tensor)
+    pcd_o3d.point["timestamp"] = timestamps_tensor
+
+    o3d.t.io.write_point_cloud(fname.as_posix(), pcd_o3d)
