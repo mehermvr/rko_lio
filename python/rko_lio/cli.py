@@ -308,7 +308,7 @@ def cli(
 
     if log_results and results_dir:
         results_dir.mkdir(parents=True, exist_ok=True)
-        pipeline.dump_results_to_disk(results_dir, run_name)
+        pipeline.dump_results_to_disk(results_dir, data_path.name)
 
 
 if __name__ == "__main__":
