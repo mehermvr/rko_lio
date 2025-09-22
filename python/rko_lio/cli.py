@@ -295,6 +295,7 @@ def cli(
         extrinsic_imu2base=extrinsic_imu2base,
         extrinsic_lidar2base=extrinsic_lidar2base,
         viz=viz,
+        data_path=data_path,
     )
 
     from tqdm import tqdm

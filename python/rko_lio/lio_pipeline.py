@@ -49,6 +49,7 @@ class LIOPipeline:
         extrinsic_lidar2base: np.ndarray | None = None,
         viz: bool = False,
         viz_every_n_frames: int = 20,
+        data_path: Path = None,
     ):
         """
         Parameters
@@ -68,6 +69,8 @@ class LIOPipeline:
         self.imu_buffer: list[dict] = []
         # Each: dict with keys 'start_time', 'end_time', 'scan', 'timestamps'
         self.lidar_buffer: list[dict] = []
+
+        self.ply_dump_folder_name = data_path.name
 
         self.viz = viz
         if viz:
@@ -174,7 +177,7 @@ class LIOPipeline:
                     frame["scan"],
                     frame["timestamps"],
                     frame["end_time"],
-                    output_dir="ply_dump_raw",
+                    output_dir=Path("ply_dump_raw") / self.ply_dump_folder_name,
                 )
                 # Register the lidar scan
                 try:
@@ -304,7 +307,7 @@ def save_raw_scan_as_ply(
     raw_scan: np.ndarray,
     timestamps: np.ndarray,
     end_time_seconds: float,
-    output_dir: str = "ply_dump_raw",
+    output_dir: Path,
 ):
     """
     Saves the raw scan points with timestamps as a PLY file.
