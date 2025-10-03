@@ -6,6 +6,6 @@ option(TBB_TEST OFF)
 
 FetchContent_Declare(
   TBB
-  URL https://github.com/uxlfoundation/oneTBB/archive/refs/tags/v2022.2.0.tar.gz
+  URL https://github.com/uxlfoundation/oneTBB/archive/refs/tags/v2022.3.0-rc1.tar.gz
       SYSTEM EXCLUDE_FROM_ALL OVERRIDE_FIND_PACKAGE)
 FetchContent_MakeAvailable(TBB)
