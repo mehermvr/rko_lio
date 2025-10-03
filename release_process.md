@@ -1,5 +1,7 @@
 just a documentation of RKO LIO's release process for my own sake.
 
+# subsequent releases
+
 steps: 
 
 1. checkout a new branch because catkin will be pushing some changes automatically. (name it bump version or something). Set this as well:
@@ -40,3 +42,12 @@ we don't need to do first time releases so i wont mention that here. if i ever n
 That opens a PR against ros/rosdistro. Will take a little bit to get accepted. but then the build farm will pick it up after. I still have to see if there is a faster way to iterate on the actual build farm build (even locally), then to actually bump the version every time.
 
 6. We're not done. python release. go to the releases page, and draft a new release. pick the new tag. and generate changelog. and then release. now you're done. if the workflows dont break
+
+# new release
+
+```bash
+bloom-release --new-track --rosdistro jazzy --track jazzy rko_lio
+bloom-release --new-track --rosdistro kilted --track kilted rko_lio
+```
+
+and default values for all entries because we already had a rolling track which configured everything.
