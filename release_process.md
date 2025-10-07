@@ -35,7 +35,10 @@ by default will bump the minor version. `-t` is tag prefix, since we like v0.x.x
 ```bash
 vim python/pyproject.toml
 modify the version
-push. and MERGE THE PR
+git add -p
+git commit
+git push
+MERGE THE PR
 ```
 
 5. merge the branch with a PR. there will be a v0.x.x tag on that branch on some commit. which is lost after the merge. so you'll have to retag current master, here's the commands
