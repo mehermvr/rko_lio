@@ -57,6 +57,7 @@ bloom-release --rosdistro rolling rko_lio --pretend
 bloom-release --rosdistro rolling rko_lio
 bloom-release --rosdistro jazzy rko_lio
 bloom-release --rosdistro kilted rko_lio
+bloom-release --rosdistro humble rko_lio
 ```
 
 7. python release. go to the releases page, and draft a new release. pick the new tag. and generate changelog. and then release. now you're done. if the workflows dont break
@@ -71,6 +72,7 @@ The above opens a PR against ros/rosdistro. Will take a little bit to get accept
 ```bash
 bloom-release --new-track --rosdistro jazzy --track jazzy rko_lio
 bloom-release --new-track --rosdistro kilted --track kilted rko_lio
+bloom-release --new-track --rosdistro humble --track kilted rko_lio
 ```
 
 and default values for all entries because we already had a rolling track which configured everything.
