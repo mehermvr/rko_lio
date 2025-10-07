@@ -16,6 +16,7 @@ git branch --set-upstream-to=origin/$new_branch
 2. from the root
 ```bash
 catkin_generate_changelog
+vim CHANGELOG.rst
 ``` 
 
 check Changelog.rst and commit it
