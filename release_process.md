@@ -13,16 +13,17 @@ git push
 git branch --set-upstream-to=origin/$new_branch
 ```
 
+check Changelog.rst and commit it
+
 2. from the root
 ```bash
 catkin_generate_changelog
 vim CHANGELOG.rst
 git add -p
 git commit
+message -> "changelog"
 git push
 ``` 
-
-check Changelog.rst and commit it
 
 3. 
 ```bash
