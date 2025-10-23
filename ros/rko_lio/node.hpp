@@ -27,6 +27,7 @@
 // stl
 #include <atomic>
 #include <condition_variable>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -58,6 +59,8 @@ public:
   std::string odom_frame = "odom";
   std::string odom_topic = "/rko_lio/odometry";
   std::string map_topic = "/rko_lio/local_map";
+
+  bool dump_results = false;
   std::string results_dir = "results";
   std::string run_name = "rko_lio_run";
 
@@ -104,6 +107,7 @@ public:
   void publish_odometry(const core::State& state, const core::Secondsd& stamp) const;
   void publish_lidar_accel(const Eigen::Vector3d& acceleration, const core::Secondsd& stamp) const;
   void publish_map_loop();
+  void dump_results_to_disk(const std::filesystem::path& results_dir, const std::string& run_name) const;
 
   ~Node();
   Node(const Node&) = delete;

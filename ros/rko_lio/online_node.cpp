@@ -53,8 +53,6 @@ public:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() {
     return node->get_node_base_interface();
   }
-
-  ~OnlineNode() { lio->dump_results_to_disk(results_dir, run_name); }
 };
 } // namespace rko_lio::ros
 
