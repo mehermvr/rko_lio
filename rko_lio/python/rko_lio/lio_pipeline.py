@@ -34,7 +34,12 @@ import yaml
 
 from .lio import LIO, LIOConfig
 from .scoped_profiler import ScopedProfiler
-from .util import height_colors_from_points, info, transform_to_quat_xyzw_xyz
+from .util import (
+    height_colors_from_points,
+    info,
+    save_scan_as_ply,
+    transform_to_quat_xyzw_xyz,
+)
 
 
 class LIOPipeline:
@@ -51,6 +56,9 @@ class LIOPipeline:
         extrinsic_lidar2base: np.ndarray | None = None,
         viz: bool = False,
         viz_every_n_frames: int = 20,
+        dump_deskewed_scans: bool = False,
+        log_dir: Path = Path("results"),
+        run_name: str = "rko_lio_run",
     ):
         """
         Parameters
@@ -71,6 +79,11 @@ class LIOPipeline:
         # Each: dict with keys 'start_time', 'end_time', 'scan', 'timestamps'
         self.lidar_buffer: list[dict] = []
 
+        self.dump_deskewed_scans = dump_deskewed_scans
+        self.log_dir = log_dir
+        self.run_name = run_name
+        self._output_dir = None
+
         self.viz = viz
         if viz:
             import rerun
@@ -79,6 +92,31 @@ class LIOPipeline:
             self.viz_counter = 0
             self.viz_every_n_frames = viz_every_n_frames
             self.last_xyz = np.zeros(3)
+            if self.lio.config.initialization_phase:
+                self.rerun.log(
+                    "world",
+                    self.rerun.ViewCoordinates.RIGHT_HAND_Z_UP,
+                    static=True,
+                )
+
+    @property
+    def output_dir(self) -> Path:
+        """
+        The directory used for file logging if enabled.
+        Folder is {log_dir}/{run_name}_{index}.
+        Automatically bumps the index (from 0) if similar names exist, to avoid overwriting.
+        """
+        if self._output_dir is None:
+            self.log_dir.mkdir(parents=True, exist_ok=True)
+            index = 0
+            while True:
+                output_dir = self.log_dir / f"{self.run_name}_{index}"
+                if not output_dir.exists():
+                    break
+                index += 1
+            output_dir.mkdir()
+            self._output_dir = output_dir
+        return self._output_dir
 
     def add_imu(
         self,
@@ -168,21 +206,53 @@ class LIOPipeline:
                             imu["angular_velocity"],
                             imu["time"],
                         )
+                if self.viz:
+                    times = np.array(
+                        [imu["time"] for imu in imu_to_process], dtype=np.float64
+                    )
+                    accels = np.array(
+                        [imu["acceleration"] for imu in imu_to_process],
+                        dtype=np.float64,
+                    )
+                    ang_vels = np.array(
+                        [imu["angular_velocity"] for imu in imu_to_process],
+                        dtype=np.float64,
+                    )
+
+                    log_vector_columns(self.rerun, "imu/acceleration", times, accels)
+                    log_vector_columns(
+                        self.rerun, "imu/angular_velocity", times, ang_vels
+                    )
+                    # before the reset gets called in register scan
+                    stats = self.lio.interval_stats()
+                    self.rerun.set_time("data_time", timestamp=frame["end_time"])
+                    self.rerun.log(
+                        "imu/imu_count", self.rerun.Scalars(float(stats.imu_count))
+                    )
+                    log_vector(
+                        self.rerun, "imu/avg_acceleration", stats.avg_imu_accel()
+                    )
+                    log_vector(
+                        self.rerun, "imu/avg_body_acceleration", stats.avg_body_accel()
+                    )
+                    log_vector(self.rerun, "imu/avg_ang_velocity", stats.avg_ang_vel())
+
                 # Remove processed IMUs from buffer (those with time < lidar end_time)
                 self.imu_buffer = [
                     imu for imu in self.imu_buffer if imu["time"] >= frame["end_time"]
                 ]
+
                 # Register the lidar scan
                 try:
                     if self.extrinsic_lidar2base is not None:
                         # TODO: rerun the deskewed scan as well, but there is some flickering in the viz for some reason
-                        self.lio.register_scan_with_extrinsic(
+                        deskewed_scan = self.lio.register_scan_with_extrinsic(
                             self.extrinsic_lidar2base,
                             frame["scan"],
                             frame["timestamps"],
                         )
                     else:
-                        self.lio.register_scan(
+                        deskewed_scan = self.lio.register_scan(
                             frame["scan"],
                             frame["timestamps"],
                         )
@@ -193,15 +263,15 @@ class LIOPipeline:
                     )
                     continue
 
+            if self.dump_deskewed_scans:
+                save_scan_as_ply(
+                    deskewed_scan,
+                    frame["end_time"],
+                    output_dir=self.output_dir / "deskewed_scans",
+                )
+
             if self.viz:
                 with ScopedProfiler("Pipeline - Visualization") as viz_timer:
-                    if self.lio.config.initialization_phase:
-                        self.rerun.log(
-                            "world",
-                            self.rerun.ViewCoordinates.RIGHT_HAND_Z_UP,
-                            static=True,
-                        )
-                    self.rerun.set_time("data_time", timestamp=frame["end_time"])
                     pose = self.lio.pose()
                     self.rerun.log(
                         "world/lidar",
@@ -239,28 +309,15 @@ class LIOPipeline:
                             ),
                         )
 
-    def dump_results_to_disk(self, results_dir: Path, run_name: str):
+    def dump_results_to_disk(self):
         """
-        Write LIO results to disk in a new {run_name}_{number} directory under results_dir.
-
-        Automatically bumps numeric suffix (from 0) to avoid overwriting.
+        Write LIO results to disk under LIOPipeline.output_dir.
 
         Writes:
         - Trajectory (timestamps and poses) in TUM format text file.
         - Configuration as YAML file.
         """
-        results_dir = Path(results_dir)
-        results_dir.mkdir(parents=True, exist_ok=True)
-
-        index = 0
-        while True:
-            output_dir = results_dir / f"{run_name}_{index}"
-            if not output_dir.exists():
-                break
-            index += 1
-        output_dir.mkdir()
-
-        traj_file = output_dir / f"{run_name}_{index}_tum.txt"
+        traj_file = self.output_dir / f"{self.output_dir.name}_tum.txt"
         timestamps, poses = self.lio.poses_with_timestamps()
         with traj_file.open("w") as f:
             for t, p in zip(timestamps, poses):
@@ -286,7 +343,7 @@ class LIOPipeline:
         if self.viz:
             combined_config["viz_every_n_frames"] = self.viz_every_n_frames
 
-        settings_file = output_dir / "settings.yaml"
+        settings_file = self.output_dir / "settings.yaml"
         with settings_file.open("w") as f:
             f.write(
                 "# please note that this file is not directly useable with rko_lio -c <config_file>.\n"
@@ -294,3 +351,42 @@ class LIOPipeline:
             )
             yaml.dump(combined_config, f, sort_keys=False)
         info(f"Configuration written to {settings_file.resolve()}")
+
+
+def log_vector(rerun, entity_path_prefix: str, vector):
+    """
+    Logs a vector as three scalar time-series in rerun.
+
+    Args:
+        rerun: rerun module
+        entity_path_prefix: Base path for scalar logs (e.g. "imu/avg_acceleration")
+        vector: Iterable or np.ndarray with 3 elements (x, y, z)
+    """
+    rerun.log(f"{entity_path_prefix}/x", rerun.Scalars(vector[0]))
+    rerun.log(f"{entity_path_prefix}/y", rerun.Scalars(vector[1]))
+    rerun.log(f"{entity_path_prefix}/z", rerun.Scalars(vector[2]))
+
+
+def log_vector_columns(
+    rerun, entity_path_prefix: str, times: np.ndarray, vectors: np.ndarray
+):
+    """
+    Log a batch of 3D vectors over multiple timestamps in rerun,
+    sending one column batch per vector axis.
+
+    Args:
+        rerun: rerun module or rerun instance.
+        entity_path_prefix: base path e.g. 'imu/acceleration'.
+        times: 1D np.ndarray of timestamps (float64).
+        vectors: 2D np.ndarray, shape (N, 3) where columns are x,y,z.
+    """
+    # Common time column to link all components
+    time_col = rerun.TimeColumn("data_time", timestamp=times)
+
+    # For each component, prepare scalar column and send
+    for dim, axis_label in enumerate(["x", "y", "z"]):
+        rerun.send_columns(
+            f"{entity_path_prefix}/{axis_label}",
+            indexes=[time_col],
+            columns=rerun.Scalars.columns(scalars=vectors[:, dim]),
+        )
