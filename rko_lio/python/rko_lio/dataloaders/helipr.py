@@ -35,6 +35,7 @@ from pathlib import Path
 import numpy as np
 
 from .. import rko_lio_pybind
+from ..config import TimestampProcessingConfig
 from ..scoped_profiler import ScopedProfiler
 from ..util import error_and_exit, info
 from .helipr_file_reader_pybind import read_lidar_bin
@@ -47,7 +48,14 @@ class HeliprDataLoader:
     sequence: LiDAR sensor name: 'Aeva', 'Avia', 'Ouster', 'Velodyne'
     """
 
-    def __init__(self, data_path: Path, sequence: str | None = None, *args, **kwargs):
+    def __init__(
+        self,
+        data_path: Path,
+        sequence: str | None = None,
+        timestamp_processing_config=TimestampProcessingConfig(),
+        *args,
+        **kwargs,
+    ):
         if sequence is None:
             error_and_exit("HeLiPR dataloader needs a --sequence argument.")
 
@@ -56,8 +64,7 @@ class HeliprDataLoader:
             DeprecationWarning,
             stacklevel=2,
         )
-
-        self.read_lidar_bin = read_lidar_bin
+        self.timestamp_processing_config = timestamp_processing_config
 
         self.data_path = Path(data_path)
         self.sensor = sequence  # e.g. "Aeva"
@@ -127,11 +134,32 @@ class HeliprDataLoader:
 
     def _build_entries(self):
         entries = []
-        for imu in self._imu_data:
-            entries.append(("imu", imu["timestamp"], imu))
-        for lidar in self._lidar_entries:
-            entries.append(("lidar", lidar["timestamp"], lidar))
-        entries.sort(key=lambda x: x[1])
+        stamp_file = self.data_path / "stamp.csv"
+        if not stamp_file.is_file():
+            error_and_exit(f"Missing {stamp_file}")
+
+        imu_map = {imu["timestamp"]: imu for imu in self._imu_data}
+        lidar_map = {lidar["timestamp"]: lidar for lidar in self._lidar_entries}
+
+        with open(stamp_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                ts_str, kind_str = line.split(",")
+                ts = int(ts_str)
+                if kind_str == "imu":
+                    if ts not in imu_map:
+                        error_and_exit(
+                            f"Timestamp {ts} from stamp.csv not found in imu data"
+                        )
+                    entries.append(("imu", ts, imu_map[ts]))
+                elif kind_str == self.sensor.lower():
+                    if ts not in lidar_map:
+                        error_and_exit(
+                            f"Timestamp {ts} from stamp.csv not found in lidar data"
+                        )
+                    entries.append(("lidar", ts, lidar_map[ts]))
         return entries
 
     def __len__(self):
@@ -156,13 +184,14 @@ class HeliprDataLoader:
                 )
             elif kind == "lidar":
                 header_stamp_sec = data["timestamp"] / 1e9
-                points, raw_timestamps = self.read_lidar_bin(
+                points, raw_timestamps = read_lidar_bin(
                     str(data["filename"]), self.sensor
                 )
                 points_arr = np.asarray(points).reshape(-1, 3)
                 start, end, abs_timestamps = rko_lio_pybind._process_timestamps(
                     rko_lio_pybind._VectorDouble(np.asarray(raw_timestamps)),
                     header_stamp_sec,
+                    self.timestamp_processing_config,
                 )
                 return ("lidar", (points_arr, np.asarray(abs_timestamps)))
 
