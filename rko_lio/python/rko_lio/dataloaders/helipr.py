@@ -154,12 +154,18 @@ class HeliprDataLoader:
                             f"Timestamp {ts} from stamp.csv not found in imu data"
                         )
                     entries.append(("imu", ts, imu_map[ts]))
-                elif kind_str == self.sensor.lower():
-                    if ts not in lidar_map:
-                        error_and_exit(
-                            f"Timestamp {ts} from stamp.csv not found in lidar data"
-                        )
-                    entries.append(("lidar", ts, lidar_map[ts]))
+                else:
+                    # Special handling for "avia" sensor where CSV uses "livox_avia"
+                    expected_lidar_kind = self.sensor.lower()
+                    if expected_lidar_kind == "avia":
+                        expected_lidar_kind = "livox_avia"
+
+                    if kind_str == expected_lidar_kind:
+                        if ts not in lidar_map:
+                            error_and_exit(
+                                f"Timestamp {ts} from stamp.csv not found in lidar data"
+                            )
+                        entries.append(("lidar", ts, lidar_map[ts]))
         return entries
 
     def __len__(self):
