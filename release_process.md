@@ -29,7 +29,7 @@ git push
 ```bash
 catkin_prepare_release -t v
 ```
-by default will bump the minor version. `-t` is tag prefix, since we like v0.x.x names
+by default will bump the patch version. `--minor` for bumping the minor version. `-t` is tag prefix, since we like v0.x.x names
 
 4. modify pyproject to match version
 
